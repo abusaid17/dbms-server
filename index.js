@@ -52,26 +52,37 @@ DB.connect((err) => {
 
 
 
-
 // User Registration API
 app.post('/register', async (req, res) => {
-    const { username, email, password } = req.body;
+    console.log(req.body);
+    const { username, email, password, role } = req.body;
 
     if (!username || !email || !password) {
         return res.status(400).json({ error: 'All fields are required' });
     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    try {
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-    const sql = 'INSERT INTO Users (Username, Email, Password) VALUES (?, ?, ?)';
-    DB.query(sql, [username, email, hashedPassword], (err, result) => {
-        if (err) {
-            return res.status(500).json({ error: err.message });
-        }
-        res.json({ message: 'User registered successfully' });
-    });
+        // Correct SQL syntax and parameter passing
+        const sql = "INSERT INTO Users (`Username`, `Email`, `Password`, `role`) VALUES (?, ?, ?, ?)";
+        const values = [username, email, hashedPassword, role || 'user']; // Default role to 'user' if not provided
+
+        DB.query(sql, values, (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: err.message });
+            }
+            res.json({ message: 'User registered successfully' });
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
+
+
 // User Login API
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
@@ -81,6 +92,7 @@ app.post('/login', (req, res) => {
     }
 
     const sql = 'SELECT * FROM Users WHERE Email = ?';
+
     DB.query(sql, [email], async (err, results) => {
         if (err) {
             return res.status(500).json({ error: 'Database error', details: err.message });
@@ -119,6 +131,7 @@ app.post('/login', (req, res) => {
 
 
 
+// Here work for openWork tabase table
 // API Route to Add User for create Routes
 app.post("/add_user", (req, res) => {
     const sql =
@@ -149,10 +162,9 @@ app.post("/add_user", (req, res) => {
         });
     });
 });
-
 // API Route to Get All Users
 app.get("/get_users", (req, res) => {
-    const sql = "SELECT * FROM OpenWork";
+    const sql = "SELECT * FROM Users";
 
     DB.query(sql, (err, results) => {
         if (err) {
@@ -163,11 +175,11 @@ app.get("/get_users", (req, res) => {
     });
 });
 //get by :id for openWork table create user
-app.get("/get_user/:id", (req, res) => {
-    const sql = "SELECT * FROM OpenWork WHERE id = ?";
-    const values = [req.params.id];
+app.get("/get_user/:email", (req, res) => {
+    const sql = "SELECT * FROM Users WHERE Email = ?";
+    const email = [req.params.email];
 
-    DB.query(sql, values, (err, result) => {
+    DB.query(sql, email, (err, result) => {
         if (err) {
             console.error("Error fetching user:", err);
             return res.status(500).json({ message: "Database error", error: err });
@@ -195,11 +207,11 @@ app.put("/update/:id", (req, res) => {
     });
 });
 // API Route to Delete a User by ID
-app.delete("/delete_user/:id", (req, res) => {
-    const sql = "DELETE FROM OpenWork WHERE id = ?";
-    const id = req.params.id; // Extract ID from URL params
-    console.log("id :  ", id);
-    DB.query(sql, [id], (err, result) => {
+app.delete("/delete_user/:Regi_ID", (req, res) => {
+    const sql = "DELETE FROM Users WHERE Regi_ID = ?";
+    const Regi_ID = req.params.Regi_ID; // Extract ID from URL params
+    // console.log("id :  ", Regi_ID);
+    DB.query(sql, [Regi_ID], (err, result) => {
         if (err) return res.json({ message: "Database error", error: err });
 
         return res.json(result);
@@ -211,15 +223,12 @@ app.delete("/delete_user/:id", (req, res) => {
 
 
 
-
-
-
 // CRUD For JobOpportunity Table
 app.post("/add_job", (req, res) => {
     const sql = `
         INSERT INTO JobOpportunities 
-        (Company_Name, JobType, JobName, Location, Joining_Post, Salary, Apply_Last_Date, JoinDate, TimeDuration, AboutJob, RequiredSkills, AboutCompany, NumberOfOpenings) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (Company_Name, JobType, JobName, Location, Joining_Post, Salary, Apply_Last_Date, JoinDate, TimeDuration, AboutJob, RequiredSkills, AboutCompany, NumberOfOpenings,userMail) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
     `;
     const values = [
         req.body.companyName,
@@ -234,9 +243,10 @@ app.post("/add_job", (req, res) => {
         req.body.aboutJob,
         req.body.requiredSkills,
         req.body.aboutCompany,
-        req.body.numberOfOpenings
+        req.body.numberOfOpenings,
+        req.body.userMail
     ];
-    console.log("post",values);
+    console.log("post", values);
 
     // Execute query
     DB.query(sql, values, (err, result) => {
@@ -295,19 +305,19 @@ app.put("/update_job/:JobID", (req, res) => {
     const sql = `UPDATE JobOpportunities SET Company_Name=?, JobType=?, JobName=?, Location=?, Joining_Post=?, Salary=?, Apply_Last_Date=?, JoinDate=?, TimeDuration=?,AboutJob=?,RequiredSkills=?,AboutCompany=?, NumberOfOpenings=? WHERE JobID=?`;
 
     const values = [
-        req.body.Company_Name, 
-        req.body.JobType, 
-        req.body.JobName, 
-        req.body.Location, 
-        req.body.Joining_Post, 
-        req.body.Salary, 
-        req.body.Apply_Last_Date, 
-        req.body.JoinDate, 
-        req.body.TimeDuration, 
-        req.body.AboutJob, 
-        req.body.RequiredSkills, 
-        req.body.AboutCompany, 
-        req.body.NumberOfOpenings, 
+        req.body.Company_Name,
+        req.body.JobType,
+        req.body.JobName,
+        req.body.Location,
+        req.body.Joining_Post,
+        req.body.Salary,
+        req.body.Apply_Last_Date,
+        req.body.JoinDate,
+        req.body.TimeDuration,
+        req.body.AboutJob,
+        req.body.RequiredSkills,
+        req.body.AboutCompany,
+        req.body.NumberOfOpenings,
         req.params.JobID
     ];
 
@@ -350,14 +360,6 @@ app.delete("/delete_job/:JobID", (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
 // API to fetch all job opportunities show data from backend 
 app.get('/jobopportunities', (req, res) => {
     const sql = 'SELECT * FROM JobOpportunities';
@@ -368,9 +370,6 @@ app.get('/jobopportunities', (req, res) => {
         res.json(results);
     });
 });
-
-
-
 
 // Route to get job details by jobId for view details page
 app.get("/jobopportunities/:jobId", (req, res) => {
@@ -395,6 +394,7 @@ app.get("/jobopportunities/:jobId", (req, res) => {
 
 
 
+// Work for view table
 
 // POST route to insert data for create job opportunity
 app.post('/viewdetails', (req, res) => {
@@ -422,7 +422,6 @@ app.post('/viewdetails', (req, res) => {
         res.status(200).json({ message: 'Job details added successfully', result });
     });
 });
-
 // API to fetch View Job Details Table Data
 app.get('/ViewJobDetails', (req, res) => {
     const sql = 'SELECT * FROM JobOpportunities';
