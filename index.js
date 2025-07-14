@@ -394,7 +394,6 @@ app.get("/jobopportunities/:jobId", (req, res) => {
 
 
 
-// Work for view table
 
 // POST route to insert data for create job opportunity
 app.post('/viewdetails', (req, res) => {
