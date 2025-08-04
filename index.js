@@ -433,6 +433,30 @@ app.get('/ViewJobDetails', (req, res) => {
 });
 
 
+// show job by jobname 
+
+app.get("/get_job_by_name/:jobName", (req, res) => {
+    const jobName = req.params.jobName;
+
+    const sql = `
+        SELECT * FROM JobOpportunities
+        WHERE LOWER(REPLACE(JobName, ' ', '')) = LOWER(REPLACE(?, ' ', ''))
+    `;
+
+    DB.query(sql, [jobName], (err, result) => {
+        if (err) {
+            console.error("Error fetching job:", err);
+            return res.status(500).json({ message: "Database error", error: err });
+        }
+
+        if (result.length === 0) {
+            return res.status(404).json({ message: "No job found with this name" });
+        }
+
+        return res.status(200).json(result);
+    });
+});
+
 
 
 
