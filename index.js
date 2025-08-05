@@ -332,23 +332,56 @@ app.put("/update_job/:JobID", (req, res) => {
         return res.status(200).json({ success: "data updated successfully", updatedId: req.params.JobID });
     });
 });
-// DELETE Job (DELETE)
+
+
+// DELETE Job (with related viewdetails)
 app.delete("/delete_job/:JobID", (req, res) => {
-    const sql = `DELETE FROM JobOpportunities WHERE JobID=?`;
     const { JobID } = req.params;
-    DB.query(sql, [JobID], (err, result) => {
+
+    // Step 1: Delete from viewdetails where JobID matches
+    const deleteViewDetailsSQL = `DELETE FROM viewdetails WHERE JobID = ?`;
+    DB.query(deleteViewDetailsSQL, [JobID], (err, result) => {
         if (err) {
-            console.error("Database error:", err);
-            return res.status(500).json({ error: "Database error" });
+            console.error("Error deleting from viewdetails:", err);
+            return res.status(500).json({ error: "Error deleting related viewdetails" });
         }
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: "Job not found" });
-        }
+        // Step 2: Now delete the job
+        const deleteJobSQL = `DELETE FROM JobOpportunities WHERE JobID = ?`;
+        DB.query(deleteJobSQL, [JobID], (err2, result2) => {
+            if (err2) {
+                console.error("Error deleting job:", err2);
+                return res.status(500).json({ error: "Error deleting job" });
+            }
 
-        res.status(200).json({ message: "Job deleted successfully!" });
+            if (result2.affectedRows === 0) {
+                return res.status(404).json({ message: "Job not found" });
+            }
+
+            res.status(200).json({ message: "Job deleted successfully!" });
+        });
     });
 });
+
+
+
+// // DELETE Job (DELETE)
+// app.delete("/delete_job/:JobID", (req, res) => {
+//     const sql = `DELETE FROM JobOpportunities WHERE JobID=?`;
+//     const { JobID } = req.params;
+//     DB.query(sql, [JobID], (err, result) => {
+//         if (err) {
+//             console.error("Database error:", err);
+//             return res.status(500).json({ error: "Database error" });
+//         }
+
+//         if (result.affectedRows === 0) {
+//             return res.status(404).json({ message: "Job not found" });
+//         }
+
+//         res.status(200).json({ message: "Job deleted successfully!" });
+//     });
+// });
 
 
 
@@ -434,7 +467,6 @@ app.get('/ViewJobDetails', (req, res) => {
 
 
 // show job by jobname 
-
 app.get("/get_job_by_name/:jobName", (req, res) => {
     const jobName = req.params.jobName;
 
