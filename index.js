@@ -20,6 +20,7 @@ app.use(
     })
 );
 
+
 // ✅ Manually set headers for better compatibility
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "http://localhost:5173");
@@ -35,12 +36,15 @@ app.use((req, res, next) => {
 });
 const PORT = process.env.PORT || 5001;
 
+
 const DB = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME
 });
+
+
 // Connect to MySQL
 DB.connect((err) => {
     if (err) {
@@ -49,7 +53,6 @@ DB.connect((err) => {
     }
     console.log("Connected to MySQL");
 });
-
 
 
 // User Registration API
@@ -128,10 +131,6 @@ app.post('/login', (req, res) => {
 });
 
 
-
-
-
-// Here work for openWork tabase table
 // API Route to Add User for create Routes
 app.post("/add_user", (req, res) => {
     const sql =
@@ -220,10 +219,8 @@ app.delete("/delete_user/:Regi_ID", (req, res) => {
 
 
 
-
-
-
 // CRUD For JobOpportunity Table
+
 app.post("/add_job", (req, res) => {
     const sql = `
         INSERT INTO JobOpportunities 
@@ -332,8 +329,6 @@ app.put("/update_job/:JobID", (req, res) => {
         return res.status(200).json({ success: "data updated successfully", updatedId: req.params.JobID });
     });
 });
-
-
 // DELETE Job (with related viewdetails)
 app.delete("/delete_job/:JobID", (req, res) => {
     const { JobID } = req.params;
@@ -365,34 +360,6 @@ app.delete("/delete_job/:JobID", (req, res) => {
 
 
 
-// // DELETE Job (DELETE)
-// app.delete("/delete_job/:JobID", (req, res) => {
-//     const sql = `DELETE FROM JobOpportunities WHERE JobID=?`;
-//     const { JobID } = req.params;
-//     DB.query(sql, [JobID], (err, result) => {
-//         if (err) {
-//             console.error("Database error:", err);
-//             return res.status(500).json({ error: "Database error" });
-//         }
-
-//         if (result.affectedRows === 0) {
-//             return res.status(404).json({ message: "Job not found" });
-//         }
-
-//         res.status(200).json({ message: "Job deleted successfully!" });
-//     });
-// });
-
-
-
-
-
-
-
-
-
-
-
 // API to fetch all job opportunities show data from backend 
 app.get('/jobopportunities', (req, res) => {
     const sql = 'SELECT * FROM JobOpportunities';
@@ -403,6 +370,7 @@ app.get('/jobopportunities', (req, res) => {
         res.json(results);
     });
 });
+
 
 // Route to get job details by jobId for view details page
 app.get("/jobopportunities/:jobId", (req, res) => {
@@ -423,11 +391,6 @@ app.get("/jobopportunities/:jobId", (req, res) => {
         res.json(results[0]);
     });
 });
-
-
-
-
-
 // POST route to insert data for create job opportunity
 app.post('/viewdetails', (req, res) => {
     const {
@@ -465,7 +428,6 @@ app.get('/ViewJobDetails', (req, res) => {
     });
 });
 
-
 // show job by jobname 
 app.get("/get_job_by_name/:jobName", (req, res) => {
     const jobName = req.params.jobName;
@@ -488,9 +450,6 @@ app.get("/get_job_by_name/:jobName", (req, res) => {
         return res.status(200).json(result);
     });
 });
-
-
-
 
 
 app.listen(PORT, () => {
